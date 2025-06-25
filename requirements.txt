@@ -1,10 +1,21 @@
+# 스마트 코딩 어시스턴트 필수 패키지
+
+# AI 모델 클라이언트
 anthropic==0.47.0
-dataclasses-json>=0.6.1
-jsonschema>=4.23.0
-numpy>=2.2.4
-openai==1.59.*
-pexpect>=4.9.0
-prompt-toolkit>=3.0.50
-pytest==7.4.3
+
+# 화면 캡처 및 GUI 관련
+pyautogui>=0.9.54
+Pillow>=10.0.0
+keyboard>=0.13.5
+pynput>=1.7.6
+
+# 웹 GUI 관련
+Flask>=2.3.0
+Flask-SocketIO>=5.3.0
+
+# UI 및 터미널 관련
 rich>=13.9.4
-termcolor>=2.5.0
+prompt-toolkit>=3.0.50
+
+# 기타 유틸리티
+dataclasses-json>=0.6.1

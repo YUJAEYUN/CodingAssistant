@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 수동 캡처 코딩 어시스턴트</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 450px;
+            height: 700px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-content {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: #e9ecef;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+
+        .message-time {
+            font-size: 0.7em;
+            color: #6c757d;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .controls .btn {
+            flex: 1;
+            min-width: 100px;
+            font-size: 13px;
+            padding: 10px 15px;
+        }
+
+        .notice {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .capture-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            font-size: 16px;
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            width: 100%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 수동 캡처 코딩 어시스턴트</h1>
+            <div class="status">
+                <span id="apiStatus">API 상태 확인 중...</span>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- 메시지들이 여기에 동적으로 추가됩니다 -->
+            </div>
+
+            <div class="input-container">
+                <div class="notice">
+                    ✅ 권한 문제 없는 수동 캡처 버전입니다!
+                </div>
+
+                <button onclick="captureScreen()" class="btn capture-btn">
+                    📸 화면 캡처 & 분석
+                </button>
+
+                <div class="input-group">
+                    <input type="text" id="messageInput" class="input-field" 
+                           placeholder="질문을 입력하고 Enter를 누르세요..." maxlength="500">
+                    <button onclick="sendMessage()" class="btn btn-primary">전송</button>
+                </div>
+
+                <div class="controls">
+                    <button onclick="quickCapture('이 화면의 에러를 해결해주세요')" class="btn btn-secondary">🐛 에러 해결</button>
+                    <button onclick="quickCapture('이 코드를 리뷰해주세요')" class="btn btn-secondary">📝 코드 리뷰</button>
+                    <button onclick="quickCapture('이 UI를 개선해주세요')" class="btn btn-secondary">🎨 UI 개선</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Socket.IO 연결
+        const socket = io();
+
+        // DOM 요소들
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const apiStatus = document.getElementById('apiStatus');
+
+        // 초기 데이터 로드
+        loadChatHistory();
+        loadStatus();
+
+        // Socket.IO 이벤트 리스너
+        socket.on('connect', function() {
+            console.log('서버에 연결되었습니다.');
+        });
+
+        socket.on('new_message', function(data) {
+            addMessage(data.message, data.sender, data.timestamp);
+        });
+
+        socket.on('status_update', function(data) {
+            updateStatus(data.anthropic_api);
+        });
+
+        // 메시지 전송
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message) {
+                socket.emit('send_message', { message: message });
+                messageInput.value = '';
+            }
+        }
+
+        // Enter 키로 메시지 전송
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 메시지 추가
+        function addMessage(content, sender, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = timestamp;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            if (sender === 'user') {
+                messageDiv.appendChild(timeDiv);
+                messageDiv.appendChild(contentDiv);
+            } else {
+                messageDiv.appendChild(timeDiv);
+                messageDiv.appendChild(contentDiv);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 화면 캡처
+        async function captureScreen() {
+            const prompt = prompt('분석할 내용을 입력하세요:', '이 화면을 분석하고 코딩 관련 조언을 제공해주세요.');
+            if (prompt) {
+                try {
+                    const response = await fetch('/api/capture', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: prompt })
+                    });
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        alert('오류: ' + data.message);
+                    }
+                } catch (error) {
+                    alert('서버 오류: ' + error.message);
+                }
+            }
+        }
+
+        // 빠른 캡처
+        async function quickCapture(prompt) {
+            try {
+                const response = await fetch('/api/capture', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert('오류: ' + data.message);
+                }
+            } catch (error) {
+                alert('서버 오류: ' + error.message);
+            }
+        }
+
+        // 상태 로드
+        async function loadStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                updateStatus(data.anthropic_api);
+            } catch (error) {
+                console.error('상태 로드 실패:', error);
+                apiStatus.textContent = '❌ API 상태 확인 실패';
+            }
+        }
+
+        // 상태 업데이트
+        function updateStatus(anthropicApi) {
+            if (anthropicApi) {
+                apiStatus.textContent = '✅ Anthropic API 연결됨';
+            } else {
+                apiStatus.textContent = '❌ Anthropic API 키 필요';
+            }
+        }
+
+        // 채팅 히스토리 로드
+        async function loadChatHistory() {
+            try {
+                const response = await fetch('/api/chat_history');
+                const messages = await response.json();
+                
+                chatMessages.innerHTML = '';
+                messages.forEach(msg => {
+                    addMessage(msg.message, msg.sender, msg.timestamp);
+                });
+            } catch (error) {
+                console.error('채팅 히스토리 로드 실패:', error);
+            }
+        }
+
+        // 페이지 로드 시 포커스
+        window.addEventListener('load', function() {
+            messageInput.focus();
+        });
+    </script>
+</body>
+</html>
