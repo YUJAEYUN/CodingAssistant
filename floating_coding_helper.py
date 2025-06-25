@@ -442,7 +442,7 @@ class FloatingCodingHelper:
         except Exception as e:
             self.console.print(f"[red]❌ OpenAI 분석 실패: {e}[/red]")
             return f"화면 분석 실패: {e}"
-    
+    # TODO : 프롬프트 튜닝 고도화, 퓨샷 적용 필요
     def get_coding_advice_with_claude(self, screen_analysis, user_input):
         """Claude로 코딩 조언"""
         try:
