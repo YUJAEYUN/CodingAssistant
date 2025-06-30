@@ -1,21 +1,45 @@
 # 스마트 코딩 어시스턴트 필수 패키지
+# 가상환경에서 안전한 설치를 위한 버전 명시
 
-# AI 모델 클라이언트
-anthropic==0.47.0
-
-# 화면 캡처 및 GUI 관련
-pyautogui>=0.9.54
+# 기본 필수 패키지 (항상 필요)
+rich>=13.9.4
 Pillow>=10.0.0
+pyautogui>=0.9.54
+
+# 환경변수 관리 (선택적)
+python-dotenv>=1.0.0
+
+# AI 모델 클라이언트 (코딩 테스트 도우미용)
+anthropic>=0.47.0,<1.0.0
+openai>=1.0.0,<2.0.0
+
+# LangChain 관련 패키지 (코딩 테스트 도우미용)
+# 호환성을 위해 버전 범위 지정
+langchain>=0.1.0,<0.3.0
+langchain-core>=0.1.0,<0.3.0
+langchain-community>=0.0.10,<0.3.0
+langchain-anthropic>=0.1.0,<0.3.0
+langchain-openai>=0.0.5,<0.3.0
+
+# 추가 GUI 관련 (선택적)
 keyboard>=0.13.5
 pynput>=1.7.6
 
-# 웹 GUI 관련
-Flask>=2.3.0
-Flask-SocketIO>=5.3.0
+# 웹 GUI 관련 (기존 기능용, 선택적)
+Flask>=2.3.0,<3.0.0
+Flask-SocketIO>=5.3.0,<6.0.0
 
-# UI 및 터미널 관련
-rich>=13.9.4
-prompt-toolkit>=3.0.50
+# 터미널 관련 (기존 기능용, 선택적)
+prompt-toolkit>=3.0.50,<4.0.0
 
-# 기타 유틸리티
-dataclasses-json>=0.6.1
+# 기타 유틸리티 (선택적)
+dataclasses-json>=0.6.1,<1.0.0
+
+# 벡터 데이터베이스 (고급 기능용, 선택적)
+# chromadb>=0.4.0,<1.0.0
+# sentence-transformers>=2.2.0,<3.0.0
+
+# 개발 및 테스트용 (선택적)
+# pytest>=7.0.0
+# black>=23.0.0
+# flake8>=6.0.0
